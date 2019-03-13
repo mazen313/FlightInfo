@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Migrations\20190303193457_InitialMigration.cs" />
+    <Compile Remove="Migrations\20190303195056_InitialMigration.cs" />
+    <Compile Remove="Migrations\20190303200442_InitialMigration.cs" />
+    <Compile Remove="Migrations\20190303200908_InitialMigration.cs" />
+    <Compile Remove="Migrations\20190303225204_InitialMigration.cs" />
+    <Compile Remove="Migrations\20190303225429_InitialMigration.cs" />
+    <Compile Remove="Migrations\20190304202617_InitialMigration.cs" />
+    <Compile Remove="Migrations\20190304203323_InitialMigration.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CsvHelper" Version="12.1.2" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="2.2.2" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="2.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FlightInfo.Domain\FlightInfo.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

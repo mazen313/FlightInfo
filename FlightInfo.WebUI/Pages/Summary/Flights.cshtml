@@ -1,0 +1,224 @@
+﻿@page
+@{
+    ViewData["Title"] = "Summary";
+    Layout = "~/Pages/Shared/_Layout.cshtml";
+}
+@section Styles {
+    <environment exclude="Development">
+        <link href="~/lib/gijgo/css/gijgo.min.css" rel="stylesheet" />
+        <link href="~/lib/font-awesome/css/font-awesome.min.css" rel="stylesheet" />
+    </environment>
+    <environment include="Development">
+        <link href="~/lib/gijgo/css/gijgo.css" rel="stylesheet" />
+        <link href="~/lib/font-awesome/css/font-awesome.css" rel="stylesheet" />
+    </environment>
+
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <h4>Flights</h4>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <form class="form-horizontal" role="form">
+            <div class="form-group">
+                <div class="col-sm-2">
+                    <label class="control-label">Departure Airport</label>
+                </div>
+                <div class="col-sm-10">
+                    <input id="departureAirport" placeholder="Departure Airport" style="width: 100%;">
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-sm-2">
+                    <label class="control-label">Destination Airport</label>
+                </div>
+                <div class="col-sm-10">
+                    <input id="destinationAirport" placeholder="Destination Airport" style="width: 100%;">
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-sm-offset-2 col-sm-10">
+                    <button id="generateReportButton" type="button" class="btn btn-default">Generate Report</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <table id="grid"></table>
+    </div>
+</div>
+@section scripts {
+    <environment exclude="Development">
+        <script src="~/lib/gijgo/js/gijgo.min.js"></script>
+    </environment>
+    <environment include="Development">
+        <script src="~/lib/gijgo/js/gijgo.js"></script>
+    </environment>
+    <script>
+        $(document).ready(function () {
+            $("#generateReportButton").on('click', function (e) {
+                var departureAirport = $('#departureAirport').data('kendoComboBox').dataItem();
+                var destinationAirport = $('#destinationAirport').data('kendoComboBox').dataItem();
+
+                const filter = new URLSearchParams();
+                if (departureAirport != null)
+                    filter.departureAirportId = departureAirport.airportId;
+                if (destinationAirport != null)
+                    filter.destinationAirportId = destinationAirport.airportId;
+                const queryString = Object.entries(filter).map(([key, value]) => {
+                    return `${encodeURIComponent(key)}=${encodeURIComponent(value)}`;
+                }).join('&');
+
+                var redirectWindow = window.open($reportsurl+'/FlightsReport/Info?' + queryString, '_blank');
+                redirectWindow.location;
+            });
+            var airportsDataSource = new kendo.data.DataSource({
+                type: "json",
+                serverFiltering: true,
+                transport: {
+                    read: {
+                        url: $apiurl+"/FlightInfo/FilterAirports",
+                        dataType: "json",
+                        contentType: 'application/json; charset=utf-8',
+                    },
+                    parameterMap: function (data, type) {
+                        if (type == "read" && data.filter.filters.length > 0)
+                            return "textFilter=" + data.filter.filters[0].value;
+                    }
+                },
+                schema: {
+                    data: function (response) {
+                        return response.airports;
+                    }
+                }
+            });
+            var dep=$("#departureAirport").kendoComboBox({
+                dataTextField: "airportId",
+                dataTextField: "description",
+                filter: "contains",
+                autoBind: false,
+                minLength: 3,
+                filtering: function (e) { preventFilter(e); },
+                dataSource: airportsDataSource,
+                change: selectedAirportChange
+            });
+            $("#departureAirport").data("kendoComboBox").input.on("keyup", function (e) {
+                if (this.value == "") {
+                    $("#departureAirport").data("kendoComboBox").trigger("change");
+                }
+            });
+
+            $("#destinationAirport").kendoComboBox({
+                dataTextField: "airportId",
+                dataTextField: "description",
+                filter: "contains",
+                autoBind: false,
+                filtering: function (e) { preventFilter(e); },
+                minLength: 3,
+                dataSource: airportsDataSource,
+                change: selectedAirportChange
+            });
+            function preventFilter(event) {
+                if (event.filter == null || !event.filter.value) {
+                    //prevent filtering if the filter does not value
+                    event.preventDefault();
+                }
+            }
+            function selectedAirportChange() {
+                var departureAirport = $('#departureAirport').data('kendoComboBox').dataItem();
+                var destinationAirport = $('#destinationAirport').data('kendoComboBox').dataItem();
+
+                var filter = { page: 1 };
+                filter.datetime = new Date().getTime();
+                if (departureAirport != null)
+                    filter.departureAirport = departureAirport.airportId;
+                if (destinationAirport != null)
+                    filter.destinationAirport = destinationAirport.airportId;
+
+                $.ajax({
+                    url: $apiurl+"/FlightInfo/Flights",
+                    type: "get", //send it through get method
+                    data: filter,
+                    success: function (response) {
+                        grid.clear();
+                        grid.render(response);
+                    },
+                    error: function (xhr) {
+                        //Do Something to handle error
+                    }
+                });
+            }
+
+            var olddata;
+            renderer = function (value, record, $cell, $displayEl, id) {
+                $($displayEl[0]).empty();
+                var $editBtn = $('<i class="fa fa-pencil gj-cursor-pointer" data-key="' + id + '"></i>'),
+                    $updateBtn = $('<i class="fa fa-save gj-cursor-pointer" data-key="' + id + '"></i>').hide(),
+                    $cancelBtn = $('<i class="fa fa-times gj-cursor-pointer" data-key="' + id + '"></i>').hide();
+
+                $editBtn.on('click', function (e) {
+                    grid.edit($(this).data('key'));
+                    $editBtn.hide();
+                    $updateBtn.show();
+                    $cancelBtn.show();
+                });
+
+                $updateBtn.on('click', function (e) {
+                    olddata = grid.getById($(this).data('key'));
+                    grid.update($(this).data('key'));
+                    $editBtn.show();
+                    $updateBtn.hide();
+                    $cancelBtn.hide();
+                });
+                $cancelBtn.on('click', function (e) {
+                    grid.cancel($(this).data('key'));
+                    $editBtn.show();
+                    $updateBtn.hide();
+                    $cancelBtn.hide();
+                });
+                $displayEl.append($editBtn).append($updateBtn).append($cancelBtn);
+            }
+            grid = $('#grid').grid({
+                primaryKey: 'id',
+                inlineEditing: { mode: 'command', managementColumn: false },
+                dataSource: $apiurl +'/FlightInfo/Flights',
+                uiLibrary: 'bootstrap4',
+                columns: [
+                    { field: 'id', width: 48, hidden: true },
+                    { field: 'departureAirport', title: 'Departure Airport', sortable: false },
+                    { field: 'departureAirportId', hidden: true },
+                    { field: 'destinationAirport', title: 'Destination Airport', sortable: false },
+                    { field: 'destinationAirportId', hidden: true },
+                    { field: 'fuelConsumption', title: 'Fuel Consumption (L)', sortable: false, editor: true },
+                    { field: 'distance', title: 'Distance (km)', sortable: false, editor: true },
+                    { width: 80, align: 'center', renderer: renderer }
+
+                ],
+                pager: { limit: 10, sizes: [5, 10, 20, 50] }
+            });
+            grid.on('rowDataChanged', function (e, id, record) {
+                if (!$.isNumeric(record.fuelConsumption) || !$.isNumeric(record.distance)) {
+                    record.distance = olddata.distance;
+                    grid.updateRow(id, olddata);
+                    grid.cancel(id);
+                    return;
+                }
+                $.ajax({
+                    url: $apiurl +'/FlightInfo/UpdateFlight', headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }, data: JSON.stringify({ departureAirportId: parseInt(record.departureAirportId), destinationAirportId: parseInt(record.destinationAirportId), fuelConsumption: Number(record.fuelConsumption), distance: Number(record.distance) }), method: 'POST'
+                })
+                    .fail(function () {
+                        alert('Failed to save.');
+                    });
+            });
+
+        });
+    </script>
+}

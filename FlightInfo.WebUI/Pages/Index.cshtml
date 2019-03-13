@@ -1,0 +1,157 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home page";
+}
+@section Styles {
+    <link href="~/lib/leaflet/leaflet.css" rel="stylesheet" />
+}
+<div class="text-center">
+    <h1 class="display-4">Welcome to Flight Info</h1>
+    <p>A Site dedicated to calculate flight distance and fuel consumption</p>
+</div>
+<div class="section">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6 border rounded">
+                <div role="form">
+                    <div class="mt-4 form-group">
+                        <label class="control-label">From Airport</label>
+                        <input id="departureAirport" placeholder="Departure Airport" style="width: 100%;">
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label">To Airport</label>
+                        <input id="destinationAirport" placeholder="Destination Airport" style="width: 100%;">
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div id="map" style=" height: 500px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+@section scripts {
+    <script>
+        $(document).ready(function () {
+            var map = L.map('map');
+            L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
+                maxZoom: 18,
+                id: 'mapbox.streets'
+            }).addTo(map);
+            map.setView([0, 0], 0);
+            map.setZoom(1);
+            map.invalidateSize(true);
+
+            var airportsDataSource = new kendo.data.DataSource({
+                type: "json",
+                serverFiltering: true,
+                transport: {
+                    read: {
+                        url: $apiurl+ "/FlightInfo/FilterAirports",
+                        dataType: "json",
+                        contentType: 'application/json; charset=utf-8',
+                    },
+                    parameterMap: function (data, type) {
+                        if (type == "read" && data.filter.filters.length > 0)
+                            return "textFilter=" + data.filter.filters[0].value;
+                    }
+                },
+                schema: {
+                    data: function (response) {
+                        return response.airports;
+                    }
+                }
+            });
+            $("#departureAirport").kendoComboBox({
+                dataTextField: "airportId",
+                dataTextField: "description",
+                filter: "contains",
+                autoBind: false,
+                minLength: 3,
+                filtering: function (e) { preventFilter(e); },
+                dataSource: airportsDataSource,
+                change: function () { selectedAirportChange(this); }
+            });
+
+            $("#destinationAirport").kendoComboBox({
+                dataTextField: "airportId",
+                dataTextField: "description",
+                filter: "contains",
+                autoBind: false,
+                filtering: function (e) { preventFilter(e); },
+                minLength: 3,
+                dataSource: airportsDataSource,
+                change: function () { selectedAirportChange(this) }
+            });
+
+            var bounds = new L.LatLngBounds();
+            var polylinePoints = {};
+            var polyline;
+            var polylineOptions = {
+                color: 'red',
+                weight: 3,
+                opacity: 0.9
+            };
+            function selectedAirportChange(comboboxControl) {
+                var selectedAirport = comboboxControl.dataItem();
+                if (selectedAirport != null) {
+                    var marker = L.marker([selectedAirport.latitude, selectedAirport.longitude]).addTo(map);
+                    var markerLatLang = marker.getLatLng();
+                    polylinePoints[comboboxControl.element[0].id] = marker;
+                    bounds.extend(markerLatLang);
+                    setTimeout(function () {
+                        map.fitBounds(bounds);
+                        map.setZoom(13);
+                    }, 1000);
+
+                    if (Object.keys(polylinePoints).length == 2) {
+                        $.ajax({
+                            url: $apiurl +"/FlightInfo/FlightFuelConsumption",
+                            dataType: "json",
+                            contentType: 'application/json; charset=utf-8',
+                            type: "post",
+                            data: JSON.stringify({ DepartureAirportId: $("#departureAirport").data("kendoComboBox").dataItem().airportId, DestinationAirportId: $("#destinationAirport").data("kendoComboBox").dataItem().airportId }),
+                            success: function (data) {
+                                setTimeout(function () {
+                                    drawLine(polylinePoints, polylineOptions, data);
+                                }, 1000);
+
+                            },
+                            fail: function (xhr, textStatus, errorThrown) {
+                                console.log('request failed');
+                            }
+                        });
+
+
+                    }
+                }
+                else {
+                    if (polylinePoints[comboboxControl.element[0].id] != null) {
+                        map.removeLayer(polyline);
+                        map.removeLayer(polylinePoints[comboboxControl.element[0].id]);
+                        delete polylinePoints[comboboxControl.element[0].id]
+                        if (Object.keys(polylinePoints).length == 0)
+                            map.setView([0, 0], 0);
+                    }
+                }
+            }
+            function preventFilter(event) {
+                if (event.filter == null || !event.filter.value) {
+                    //prevent filtering if the filter does not value
+                    event.preventDefault();
+                }
+            }
+
+            function drawLine(points, options, data) {
+                polyline = new L.Polyline([points["departureAirport"].getLatLng(), points["destinationAirport"].getLatLng()], options);
+                polyline.bindTooltip("Distance: " + data.distance + " KM<br/>Fuel Consumption: " + data.consumption + " L", { permanent: true });
+                map.addLayer(polyline);
+                map.fitBounds(polyline.getBounds());
+            }
+
+
+        });
+    </script>
+
+}

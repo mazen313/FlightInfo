@@ -1,0 +1,8 @@
+version: '3'
+
+services:
+  flightinfo.test:
+    image: flightinfo.test
+    build:
+      context: .
+      dockerfile: FlightInfo.Test\Dockerfile

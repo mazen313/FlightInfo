@@ -1,0 +1,43 @@
+﻿@model List<FlightInfo.Application.Report.Queries.ReportLookupModel>
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Flight Report</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="~/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" />
+</head>
+<body>
+    <div class="container">
+        <h2>Flights</h2>
+        <p>Flights Info Details</p>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Departure Airport</th>
+                    <th>Destination Airport</th>
+                    <th>Fuel Consumption (L)</th>
+                    <th>Distance (KM)</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.DepartureAirport</td>
+                        <td>@item.DestinationAirport</td>
+                        <td>@item.FuelConsumption</td>
+                        <td>@item.Distance</td>
+                    </tr>
+                }
+
+            </tbody>
+        </table>
+    </div>
+</body>
+</html> 
