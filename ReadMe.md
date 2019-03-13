@@ -19,15 +19,15 @@ Follow these steps to get your development environment set up:
   1. Clone the repository
  
   2. At the root directory, restore required packages by running:
-     ```
+
      dotnet restore
-     ```
+
   3. Next, build the solution 
-     ```
+
   4. Next, set Src\Core\MigrationApp as startup project
-     ```
+
   5. Change the connection string in appsettings.json file of MigrationApp project (currently using sql express) -- NB: Connection string should be the same in the projects FlightInfo.WebApi, FlightInfo.Reporting, MigrationApp
-	 ```
+
   6. Open Package Manager Console and run the following command after setting the Default Project in the ackage Manager Console as Src\Infrastructure\FlightInfo.Persistence:
 	```
 	Update-database
