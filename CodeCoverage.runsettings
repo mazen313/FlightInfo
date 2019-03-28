@@ -1,0 +1,8 @@
+﻿<CodeCoverage>
+  <Functions>
+    <Exclude>
+      <!-- CORE -->
+      <Function>^FlightInfo.Persistence.Migrations\..*</Function>
+    </Exclude>
+  </Functions>
+</CodeCoverage>

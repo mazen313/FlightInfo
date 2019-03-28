@@ -25,7 +25,16 @@ namespace FlightInfo.Test.Flights.Queries
         {
             var handler= new GetFuelConsumptionQueryHandler(_context);
 
-            var result = await handler.Handle(new GetFuelConsumptionQuery {  DepartureAirportId=1, DestinationAirportId=7 }, CancellationToken.None);
+            var result = await handler.Handle(new GetFuelConsumptionQuery {  DepartureAirportId=1, DestinationAirportId=4 }, CancellationToken.None);
+            result.ShouldBeOfType<FuelConsumptionModel>();
+            result.Consumption.ShouldBeGreaterThan(0);
+        }
+
+        public async Task GetFuelConsumptionCreate()
+        {
+            var handler = new GetFuelConsumptionQueryHandler(_context);
+
+            var result = await handler.Handle(new GetFuelConsumptionQuery { DepartureAirportId = 1, DestinationAirportId = 2 }, CancellationToken.None);
             result.ShouldBeOfType<FuelConsumptionModel>();
             result.Consumption.ShouldBeGreaterThan(0);
         }

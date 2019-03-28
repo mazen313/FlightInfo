@@ -33,7 +33,7 @@ namespace FlightInfo.Application.Report.Queries
             if (request.DepartureAirportId.HasValue)
             {
                 var entity = await _context.Airports
-              .SingleAsync(c => c.AirportId == request.DepartureAirportId, cancellationToken);
+              .SingleOrDefaultAsync(c => c.AirportId == request.DepartureAirportId, cancellationToken);
 
                 if (entity == null)
                 {
@@ -44,7 +44,7 @@ namespace FlightInfo.Application.Report.Queries
             if (request.DestinationAirportId.HasValue)
             {
                 var entity = await _context.Airports
-             .SingleAsync(c => c.AirportId == request.DepartureAirportId, cancellationToken);
+             .SingleOrDefaultAsync(c => c.AirportId == request.DepartureAirportId, cancellationToken);
 
                 if (entity == null)
                 {

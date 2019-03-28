@@ -26,7 +26,7 @@ namespace FlightInfo.Application.Flights.Queries
         public async Task<FuelConsumptionModel> Handle(GetFuelConsumptionQuery request, CancellationToken cancellationToken)
         {
             var entityDeparture = await _context.Airports
-               .SingleAsync(c => c.AirportId == request.DepartureAirportId, cancellationToken);
+               .SingleOrDefaultAsync(c => c.AirportId == request.DepartureAirportId, cancellationToken);
 
             if (entityDeparture == null)
             {
@@ -34,7 +34,7 @@ namespace FlightInfo.Application.Flights.Queries
             }
 
             var entityDestination = await _context.Airports
-              .SingleAsync(c => c.AirportId == request.DestinationAirportId, cancellationToken);
+              .SingleOrDefaultAsync(c => c.AirportId == request.DestinationAirportId, cancellationToken);
 
             if (entityDeparture == null)
             {

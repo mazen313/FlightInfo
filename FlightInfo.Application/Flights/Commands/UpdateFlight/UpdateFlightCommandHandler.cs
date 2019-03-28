@@ -22,7 +22,7 @@ namespace FlightInfo.Application.Flights.Commands.UpdateFlight
         public async Task<Unit> Handle(UpdateFlightCommand request, CancellationToken cancellationToken)
         {
             var entity = await _context.Flights
-               .SingleAsync(c => c.DepartureAirportId == request.DepartureAirportId && c.DestinationAirportId == request.DestinationAirportId, cancellationToken);
+               .SingleOrDefaultAsync(c => c.DepartureAirportId == request.DepartureAirportId && c.DestinationAirportId == request.DestinationAirportId, cancellationToken);
 
             if (entity == null)
             {
