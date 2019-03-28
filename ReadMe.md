@@ -22,6 +22,7 @@ Follow these steps to get your development environment set up:
      ```
      dotnet restore
      ```
+
   3. Next, build the solution 
 
   4. Next, set Src\Core\MigrationApp as startup project
